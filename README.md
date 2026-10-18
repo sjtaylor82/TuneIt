@@ -10,7 +10,7 @@ An accessible Windows guitar and bass tuner built with .NET 8 Windows Forms. Tun
 4. Choose **Start listening**, then play the string clearly.
 5. Optionally play the repeating plucked-string reference tone.
 
-Guided tuning starts on the lowest string. Choose **Next string**, press Alt+N, or say “next” to continue. Offline voice recognition uses the bundled Vosk model in release packages.
+Extract the whole release ZIP before opening TuneIt. Guided tuning starts on the lowest string. Choose **Next string**, press Alt+N, or say “next” to continue. Wait for **Voice command: Ready** before speaking. Offline voice recognition uses the bundled Vosk model in release packages.
 
 Keyboard shortcuts:
 
@@ -20,7 +20,7 @@ Keyboard shortcuts:
 - Alt+I: instrument.
 - Alt+M: tuning mode.
 
-Tutorial mode steps through strings in standard low-to-high order. The UI has keyboard mnemonics, logical tab order, high-contrast-compatible native controls, a screen-reader live region, and optional Windows speech announcements.
+Tutorial mode steps through strings in standard low-to-high order. The UI has keyboard mnemonics, logical tab order, high-contrast-compatible native controls, and a screen-reader live region.
 
 ## Build
 

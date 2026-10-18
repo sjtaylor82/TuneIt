@@ -13,10 +13,15 @@ internal sealed class VoiceCommandListener : IDisposable
     private volatile bool active;
     internal event Action? NextRecognized;
     internal event Action? SpeechStarted;
+    internal event Action? Ready;
+    internal event Action<string>? Failed;
 
     internal void Start()
     {
         active = true;
+        var modelPath = GetModelPath();
+        if (!Directory.Exists(modelPath))
+            throw new DirectoryNotFoundException("The voice-command files were not found. Extract the whole TuneIt ZIP before opening TuneIt.");
         lock (sync) worker ??= Task.Run(ProcessAudio);
     }
 
@@ -36,14 +41,14 @@ internal sealed class VoiceCommandListener : IDisposable
 
     private void ProcessAudio()
     {
-        Vosk.Vosk.SetLogLevel(-1);
-        var modelPath = Path.Combine(AppContext.BaseDirectory, "speech-model", "vosk-model-small-en-us-0.15");
-        using var model = new Model(modelPath);
-        using var recognizer = new VoskRecognizer(model, 44100,
-            "[\"next\", \"no\", \"now\", \"never\", \"name\", \"nine\", \"nice\", \"new\", \"[unk]\"]");
-        recognizer.SetWords(true);
         try
         {
+            Vosk.Vosk.SetLogLevel(-1);
+            using var model = new Model(GetModelPath());
+            using var recognizer = new VoskRecognizer(model, 44100,
+                "[\"next\", \"no\", \"now\", \"never\", \"name\", \"nine\", \"nice\", \"new\", \"[unk]\"]");
+            recognizer.SetWords(true);
+            Ready?.Invoke();
             foreach (var bytes in audio.GetConsumingEnumerable(cancellation.Token))
             {
                 if (!active) continue;
@@ -69,7 +74,15 @@ internal sealed class VoiceCommandListener : IDisposable
             }
         }
         catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            active = false;
+            Failed?.Invoke(ex.Message);
+        }
     }
+
+    private static string GetModelPath() =>
+        Path.Combine(AppContext.BaseDirectory, "speech-model", "vosk-model-small-en-us-0.15");
 
     public void Dispose()
     {

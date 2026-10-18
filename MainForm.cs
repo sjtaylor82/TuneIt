@@ -19,6 +19,7 @@ internal sealed class MainForm : Form
     private readonly LiveLabel status = new() { Text = "Ready", AutoSize = true, MaximumSize = new Size(600, 0), BorderStyle = BorderStyle.FixedSingle, Padding = new Padding(10) };
     private readonly Label reading = new() { Text = "Waiting to hear a string", AutoSize = true, Font = new Font(SystemFonts.DefaultFont.FontFamily, 12, FontStyle.Bold) };
     private readonly Label microphoneState = new() { Text = "Listening: Off", AutoSize = true, Font = new Font(SystemFonts.DefaultFont.FontFamily, 11, FontStyle.Bold) };
+    private readonly Label voiceState = new() { Text = "Voice command: Off", AutoSize = true, Visible = false };
     private readonly AudioInput input = new();
     private readonly ReferenceTone tone = new();
     private readonly VoiceCommandListener voiceCommands = new();
@@ -70,7 +71,7 @@ internal sealed class MainForm : Form
         options.Controls.AddRange([voiceNext, headphones, repeatLabel, repeat, secondsLabel]);
         var controls = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Top }; controls.Controls.AddRange([monitor, next, play]);
         var statusGroup = new GroupBox { Text = "Tuning result", AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(12) };
-        var statusFlow = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, Dock = DockStyle.Fill }; statusFlow.Controls.AddRange([microphoneState, reading, status]); statusGroup.Controls.Add(statusFlow);
+        var statusFlow = new FlowLayoutPanel { FlowDirection = FlowDirection.TopDown, AutoSize = true, Dock = DockStyle.Fill }; statusFlow.Controls.AddRange([microphoneState, voiceState, reading, status]); statusGroup.Controls.Add(statusFlow);
         // Do not set a fixed AccessibleName on changing labels: screen readers would
         // announce that name instead of the current result text.
         status.LiveSetting = AutomationLiveSetting.Off;
@@ -111,6 +112,8 @@ internal sealed class MainForm : Form
             catch (InvalidOperationException) { }
         };
         voiceCommands.SpeechStarted += () => Interlocked.Exchange(ref suppressPitchUntilTicks, Environment.TickCount64 + 1500);
+        voiceCommands.Ready += () => SetVoiceState("Voice command: Ready");
+        voiceCommands.Failed += message => SetVoiceState($"Voice command unavailable: {message}");
         input.SamplesAvailable += AnalyzeSamples;
         ChangeTuning(Tunings.Guitar);
     }
@@ -119,10 +122,27 @@ internal sealed class MainForm : Form
     {
         if (GuidedMode && voiceNext.Checked)
         {
+            voiceState.Visible = true;
+            voiceState.Text = "Voice command: Loading";
             try { voiceCommands.Start(); }
-            catch { status.Text = "Voice command unavailable"; }
+            catch (Exception ex) { voiceState.Text = $"Voice command unavailable: {ex.Message}"; }
         }
-        else voiceCommands.Stop();
+        else
+        {
+            voiceCommands.Stop();
+            voiceState.Visible = false;
+            voiceState.Text = "Voice command: Off";
+        }
+    }
+
+    private void SetVoiceState(string message)
+    {
+        try
+        {
+            if (!IsDisposed && IsHandleCreated)
+                BeginInvoke(() => { if (GuidedMode && voiceNext.Checked) voiceState.Text = message; });
+        }
+        catch (InvalidOperationException) { }
     }
 
     private void ChangeTuning(NoteInfo[] selected)
