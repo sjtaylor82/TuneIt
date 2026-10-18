@@ -1,0 +1,10 @@
+bin/
+obj/
+*-build/
+speech-model/
+*.zip
+*.user
+.vs/
+PitchTest/bin/
+PitchTest/obj/
+release-package/
