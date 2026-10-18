@@ -7,11 +7,13 @@ internal static class ScreenReaderOutput
 {
     private static object? jaws;
 
+    internal static bool IsJawsRunning => FindWindow("JFWUI2", "JAWS") != IntPtr.Zero;
+
     internal static bool TryAnnounce(string message)
     {
         // This mirrors Accessible Output 2's JAWS backend: connect to the
         // installed Freedom Scientific COM API and call SayString directly.
-        if (FindWindow("JFWUI2", "JAWS") == IntPtr.Zero) return false;
+        if (!IsJawsRunning) return false;
         try
         {
             jaws ??= Activator.CreateInstance(Type.GetTypeFromProgID("FreedomSci.JawsApi")!);

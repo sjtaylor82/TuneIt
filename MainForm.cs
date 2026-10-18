@@ -261,7 +261,7 @@ internal sealed class MainForm : Form
         }
         else
         {
-            message = targetCents < -5 ? "Higher" : targetCents > 5 ? "Lower" : "In tune";
+            message = targetCents < -5 ? "Tune higher" : targetCents > 5 ? "Tune lower" : "In tune";
         }
         reading.Text = message;
         SetStatus(message, true);
