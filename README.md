@@ -5,10 +5,11 @@ An accessible Windows guitar and bass tuner built with .NET 8 Windows Forms. Tun
 ## Use
 
 1. Choose Guitar or Bass from the Instrument list.
-2. Choose One string or Guided tuning.
-3. Choose Note and cents or Higher or lower feedback.
-4. Choose **Start listening**, then play the string clearly.
-5. Optionally play the repeating plucked-string reference tone.
+2. For guitar, choose Standard E, E flat, or D tuning.
+3. Choose One string or Guided tuning.
+4. Choose Note and cents or Higher or lower feedback.
+5. Choose **Start listening**, then play the string clearly.
+6. Optionally play the repeating plucked-string reference tone.
 
 Extract the whole release ZIP before opening TuneIt. Guided tuning starts on the lowest string. Choose **Next string**, press Alt+N, or say “next” to continue. Wait for **Voice command: Ready** before speaking. Offline voice recognition uses the bundled Vosk model in release packages.
 
@@ -18,6 +19,7 @@ Keyboard shortcuts:
 - Alt+P: play or stop the reference tone.
 - Alt+N: next string in Guided tuning.
 - Alt+I: instrument.
+- Alt+T: guitar tuning.
 - Alt+M: tuning mode.
 
 Tutorial mode steps through strings in standard low-to-high order. The UI has keyboard mnemonics, logical tab order, high-contrast-compatible native controls, and a screen-reader live region.

@@ -6,6 +6,8 @@ namespace TuneIt;
 internal sealed class MainForm : Form
 {
     private readonly ComboBox instrumentChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
+    private readonly ComboBox guitarTuningChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
+    private readonly Label guitarTuningLabel = new() { Text = "&Tuning:", AutoSize = true, Padding = new Padding(12, 6, 0, 0) };
     private readonly ComboBox modeChoice = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 220 };
     private readonly CheckBox headphones = new() { Text = "&Listen during tone", AutoSize = true, Checked = true };
     private readonly CheckBox voiceNext = new() { Text = "Say “next” to continue", AutoSize = true, Enabled = false, Checked = true };
@@ -50,7 +52,10 @@ internal sealed class MainForm : Form
         instrumentChoice.AccessibleName = "Instrument";
         instrumentChoice.Items.AddRange(["Guitar (6 strings)", "Bass (4 strings)"]);
         instrumentChoice.SelectedIndex = 0;
-        instrumentFlow.Controls.AddRange([instrumentLabel, instrumentChoice]); instrument.Controls.Add(instrumentFlow);
+        guitarTuningChoice.AccessibleName = "Guitar tuning";
+        guitarTuningChoice.Items.AddRange(["Standard E", "E flat (half step down)", "D (whole step down)"]);
+        guitarTuningChoice.SelectedIndex = 0;
+        instrumentFlow.Controls.AddRange([instrumentLabel, instrumentChoice, guitarTuningLabel, guitarTuningChoice]); instrument.Controls.Add(instrumentFlow);
         var modeGroup = new GroupBox { Text = "Tuning mode", AutoSize = true, Dock = DockStyle.Top, Padding = new Padding(12) };
         var modeFlow = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill };
         var modeLabel = new Label { Text = "&Mode:", AutoSize = true, Padding = new Padding(0, 6, 0, 0) };
@@ -75,11 +80,12 @@ internal sealed class MainForm : Form
         // Do not set a fixed AccessibleName on changing labels: screen readers would
         // announce that name instead of the current result text.
         status.LiveSetting = AutomationLiveSetting.Off;
-        var help = new Label { Text = "Shortcuts: Alt+L listen; Alt+P reference tone; Alt+I instrument; Alt+M mode; Alt+N next.", AutoSize = true, MaximumSize = new Size(630, 0) };
+        var help = new Label { Text = "Shortcuts: Alt+L listen; Alt+P reference tone; Alt+I instrument; Alt+T guitar tuning; Alt+M mode; Alt+N next.", AutoSize = true, MaximumSize = new Size(630, 0) };
         root.Controls.Add(title); root.Controls.Add(intro); root.Controls.Add(instrument); root.Controls.Add(modeGroup); root.Controls.Add(noteGroup); root.Controls.Add(feedbackGroup); root.Controls.Add(options); root.Controls.Add(controls); root.Controls.Add(statusGroup); root.Controls.Add(help);
         Controls.Add(root);
 
-        instrumentChoice.SelectedIndexChanged += (_, _) => ChangeTuning(instrumentChoice.SelectedIndex == 1 ? Tunings.Bass : Tunings.Guitar);
+        instrumentChoice.SelectedIndexChanged += (_, _) => InstrumentChanged();
+        guitarTuningChoice.SelectedIndexChanged += (_, _) => { if (instrumentChoice.SelectedIndex == 0) ChangeTuning(SelectedGuitarTuning()); };
         notes.SelectedIndexChanged += (_, _) => StringChanged();
         monitor.Click += (_, _) => ToggleListening();
         play.Click += (_, _) => ToggleTone();
@@ -152,6 +158,22 @@ internal sealed class MainForm : Form
         notes.SelectedIndex = 0; changingChecks = false;
         if (playing) StartTone(); AnnouncePrompt();
     }
+
+    private void InstrumentChanged()
+    {
+        var guitar = instrumentChoice.SelectedIndex == 0;
+        guitarTuningLabel.Visible = guitar;
+        guitarTuningChoice.Visible = guitar;
+        guitarTuningChoice.Enabled = guitar;
+        ChangeTuning(guitar ? SelectedGuitarTuning() : Tunings.Bass);
+    }
+
+    private NoteInfo[] SelectedGuitarTuning() => guitarTuningChoice.SelectedIndex switch
+    {
+        1 => Tunings.GuitarEFlat,
+        2 => Tunings.GuitarD,
+        _ => Tunings.Guitar
+    };
 
     private void StringChanged()
     {
